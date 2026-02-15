@@ -56,4 +56,4 @@ create index model_id
 create index user_id
     on chat_history (user_id);
 
-INSERT INTO web_ai_chat.account (id, username, password, email, role, register_time) VALUES (1, 'test', '$2a$10$Xqe2W.5zs/I8FAs3cK331e6tyuo4XWTHNhW1oV6bOHUzwMZ2kAPTa', '1234567890@gmail.com', 'user', '2025-11-06 15:56:37');
+INSERT INTO deep_sea_ouc.account (id, username, password, email, role, register_time) VALUES (1, 'test', '6e8996cabffefed872f81a951a930ec5759455c28290b10ac103972abd91ec8d', '1234567890@gmail.com', 'user', '2026-01-01 12:00:00');
