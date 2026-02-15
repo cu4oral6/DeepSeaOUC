@@ -1,0 +1,52 @@
+package com.github.deepseaouc.backend.listener
+
+import com.github.deepseaouc.backend.utils.Const
+import org.springframework.amqp.rabbit.annotation.RabbitHandler
+import org.springframework.amqp.rabbit.annotation.RabbitListener
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.mail.MailSender
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.stereotype.Component
+
+@Component
+@RabbitListener(queues = [Const.MAIL_QUEUE_NAME])
+class MailQueueListener(
+    private val sender: MailSender,
+
+    @param:Value("\${spring.mail.username}")
+    private val username: String
+) {
+    @RabbitHandler
+    fun senderMailMessage(data: Map<String, String>) {
+        val email = data["email"] ?: return
+        val code = data["code"] ?: return
+        val type = data["type"] ?: return
+        val message = when (type) {
+            "register" -> createMailMessage(
+                "Welcome to Our Service",
+                "Thank you for registering! Your verification code is: $code"
+                        + "\nThis code is valid for 3 minutes.",
+                email
+            )
+
+            "reset" -> createMailMessage(
+                "Password Reset Request",
+                "You requested a password reset. Your verification code is: $code"
+                        + "\nThis code is valid for 3 minutes.",
+                email
+            )
+
+            else -> return
+        }
+        sender.send(message)
+    }
+
+    fun createMailMessage(title: String, content: String, to: String): SimpleMailMessage {
+        val message = SimpleMailMessage()
+        message.subject = title
+        message.text = content
+        message.from = username
+        message.setTo(to)
+        return message
+    }
+}

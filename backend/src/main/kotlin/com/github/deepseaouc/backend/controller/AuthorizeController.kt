@@ -1,0 +1,56 @@
+package com.github.deepseaouc.backend.controller
+
+import com.github.deepseaouc.backend.entity.RestBean
+import com.github.deepseaouc.backend.entity.vo.request.EmailRegisterVO
+import com.github.deepseaouc.backend.entity.vo.request.PasswordResetVO
+import com.github.deepseaouc.backend.service.AccountService
+import jakarta.annotation.Resource
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
+import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.*
+
+@Validated
+@RestController
+@RequestMapping("/api/auth")
+class AuthorizeController(
+    @Resource
+    val service: AccountService
+) {
+
+    @GetMapping("/ask-code")
+    fun askVerifyCode(
+        @RequestParam @NotBlank @Email email: String,
+        @RequestParam @Pattern(regexp = "(register|reset)") type: String,
+        request: HttpServletRequest
+    ): RestBean<out Any?> {
+        return this.messageHandler(
+            service.askEmailVerifyCode(
+                type,
+                email,
+                request.remoteAddr
+            )
+        )
+    }
+
+    @PostMapping("/register")
+    fun emailRegister(@RequestBody @Valid vo: EmailRegisterVO): RestBean<out Any?> {
+        return this.messageHandler(service.registerEmailAccount(vo))
+    }
+
+    @PostMapping("/reset")
+    fun emailResetPassword(@RequestBody @Valid vo: PasswordResetVO): RestBean<out Any?> {
+        return this.messageHandler(service.resetEmailAccountPassword(vo))
+    }
+
+    fun messageHandler(wrongMessage: String): RestBean<out Any?> {
+        return if (wrongMessage.isBlank()) {
+            RestBean.Companion.success()
+        } else {
+            RestBean.Companion.failure(400, null, wrongMessage)
+        }
+    }
+}
